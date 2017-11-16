@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/rs/rest-layer/schema"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDictCompile(t *testing.T) {
@@ -115,4 +116,31 @@ func TestDictValidate(t *testing.T) {
 	for i := range testCases {
 		testCases[i].Run(t)
 	}
+}
+
+func TestDictGetField(t *testing.T) {
+	f := schema.Field{Description: "foobar", Filterable: true}
+	t.Run("{KeysValidator=nil}.GetField(valid)", func(t *testing.T) {
+		d := schema.Dict{KeysValidator: nil, Values: f}
+		gf := d.GetField("something")
+		assert.Equal(t, f, *gf, `d.GetField(valid)`)
+	})
+
+	t.Run("{KeysValidator=String}.GetField(valid)", func(t *testing.T) {
+		d := schema.Dict{
+			KeysValidator: schema.String{Allowed: []string{"foo", "bar"}},
+			Values:        f,
+		}
+		gf := d.GetField("foo")
+		assert.Equal(t, f, *gf, `d.GetField(valid)`)
+	})
+
+	t.Run("{KeysValidator=String}.GetField(invalid)", func(t *testing.T) {
+		d := schema.Dict{
+			KeysValidator: schema.String{Allowed: []string{"foo", "bar"}},
+			Values:        f,
+		}
+		gf := d.GetField("invalid")
+		assert.Nil(t, gf, `d.GetField(invalid)`)
+	})
 }
